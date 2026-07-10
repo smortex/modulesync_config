@@ -1,3 +1,5 @@
+# frozen_string_literal: true
+
 #  Copyright 2016 Vox Pupuli
 #
 #  Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,18 +14,19 @@
 #  See the License for the specific language governing permissions and
 #  limitations under the License.
 
-source "https://rubygems.org"
+source ENV['GEM_SOURCE'] || 'https://rubygems.org'
 
 group :development do
   gem 'pry'
 end
 
 group :release do
-  gem 'github_changelog_generator',  :require => false
+  gem 'faraday-retry', '~> 2.1', require: false
+  gem 'github_changelog_generator', '~> 1.18.0', require: false
 end
 
+gem 'metadata_json_deps', '>= 0.2.0', '< 3'
+gem 'modulesync', '>= 2.6.0'
+gem 'octokit', '~> 4.0'
 gem 'puppet_forge', '>= 2.2.9'
-gem 'metadata_json_deps', '>= 0.2.0', '< 2'
-gem 'modulesync', '>= 1.0.0'
-gem "octokit", "~> 4.0"
 # vim: syntax=ruby

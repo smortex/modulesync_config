@@ -1,19 +1,78 @@
 name: noop run
 
 on:
-  - pull_request
-  - push
+  workflow_dispatch: {}
+  pull_request: {}
+  push:
+    branches:
+      - master
+
+permissions:
+  contents: read
 
 jobs:
   unit:
     runs-on: ubuntu-latest
     name: Run msync --noop against all modules
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
       - name: Setup ruby
-        uses: ruby/setup-ruby@v1
+        uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
         with:
-          ruby-version: 2.7
+          ruby-version: ruby
           bundler-cache: true
       - name: Run msync --noop
-        run: bundle exec msync update --noop --git-base=https://github.com/
+        run: bundle exec msync update --noop --git-base=https://github.com/ --branch foobranch
+  metadata_json_deps:
+    runs-on: ubuntu-latest
+    name: Run metadata_json_deps on all modules
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup ruby
+        uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
+        with:
+          ruby-version: ruby
+          bundler-cache: true
+      - name: Run msync --noop
+        run: bundle exec msync clone --git-base=https://github.com/
+      - run: bundle exec rake metadata_deps
+  outdated_module_summary:
+    runs-on: ubuntu-latest
+    name: Prints a list of all modules with outdated modulesync_config version
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+      - name: Setup ruby
+        uses: ruby/setup-ruby@d45b1a4e94b71acab930e56e79c6aa188764e7f9 # v1.316.0
+        with:
+          ruby-version: ruby
+          bundler-cache: true
+      - name: Run msync --noop
+        run: bundle exec msync clone --git-base=https://github.com/
+      - name: Generate summary
+        run: bundle exec bin/outdated_modules_and_their_version
+
+  tests:
+    needs:
+      - unit
+      - metadata_json_deps
+    runs-on: ubuntu-latest
+    name: Test suite
+    steps:
+      - run: echo Test suite completed
+
+  automerge:
+    name: Enable auto-merge
+    if: github.event_name == 'pull_request' && (github.event.pull_request.user.login == 'dependabot[bot]' || github.event.pull_request.user.login == 'renovate[bot]')
+    needs:
+      - tests
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Enable auto-merge for PR
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          PR_HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: gh pr merge --auto --merge --match-head-commit "$PR_HEAD_SHA" "$PR_URL"

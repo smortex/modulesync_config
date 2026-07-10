@@ -8,10 +8,11 @@ end
 
 begin
   require 'github_changelog_generator/task'
+  require 'yaml'
 
   GitHubChangelogGenerator::RakeTask.new :changelog do |config|
     config.header = "# Changelog\n\nAll notable changes to this project will be documented in this file."
-    config.exclude_labels = %w{duplicate question invalid wontfix wont-fix skip-changelog}
+    config.exclude_labels = %w{duplicate question invalid wontfix wont-fix skip-changelog github_actions}
     config.user = 'ccin2p3'
     config.project = 'modulesync_config'
     config.future_release = YAML.safe_load(File.read('moduleroot/.msync.yml.erb'))['modulesync_config_version']

@@ -4,20 +4,34 @@
 
 name: Release
 
+# yamllint disable-line rule:truthy
 on:
   push:
     tags:
-      - '*'
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#onpushbranchestagsbranches-ignoretags-ignore
+      # https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#filter-pattern-cheat-sheet
+      - 'v[0-9]+.[0-9]+.[0-9]+'
 
-env:
-  BUNDLE_WITHOUT: development:test:system_tests
+permissions:
+  contents: write
 
 jobs:
   release:
     name: Release
-    uses: voxpupuli/gha-puppet/.github/workflows/release.yml@v1
+    uses: voxpupuli/gha-puppet/.github/workflows/release.yml@v4
     with:
-      allowed_owner: '<%= @configs[:namespace] %>'
+<%- if @configs['with'] -%>
+<%- @configs['with'].each do |k,v| -%>
+<%- if v.is_a?(String) -%>
+      <%= k %>: '<%= v %>'
+<%- else -%>
+      <%= k %>: <%= v %>
+<%- end -%>
+<%- end -%>
+<%- end -%>
+<%- unless @configs['with']&.has_key?('allowed_owner') -%>
+      allowed_owner: '<%= @configs['allowed_owner'] || @configs[:namespace] %>'
+<%- end -%>
     secrets:
       # Configure secrets here:
       #  https://docs.github.com/en/actions/security-guides/encrypted-secrets

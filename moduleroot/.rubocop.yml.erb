@@ -2,11 +2,11 @@
 # Managed by modulesync - DO NOT EDIT
 # https://voxpupuli.org/docs/updating-files-managed-with-modulesync/
 
+<% if File.exist?(File.join(@metadata[:workdir], '.rubocop_todo.yml')) -%>
+inherit_from: .rubocop_todo.yml
+<% end -%>
 inherit_gem:
   voxpupuli-test: rubocop.yml
-
-Style/TrailingCommaInArguments:
-  EnforcedStyleForMultiline: consistent_comma
-
-Style/WordArray:
-  EnforcedStyle: brackets
+<% if @configs['extra'] -%>
+<%= @configs['extra'].to_yaml.sub(/\A---\n/, '') -%>
+<% end -%>
